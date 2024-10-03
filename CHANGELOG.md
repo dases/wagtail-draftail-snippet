@@ -1,6 +1,7 @@
-# 0.4.3
+# 1.0.0
 
-Support Wagtail 5.x
+Support Wagtail 6.x
+Remove support for Wagtail < 4
 
 # 0.4.2
 
