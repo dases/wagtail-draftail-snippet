@@ -1,37 +1,31 @@
 (() => {
   'use strict';
 
+  const $ = window.jQuery;
   const React = window.React;
   const Modifier = window.DraftJS.Modifier;
   const AtomicBlockUtils = window.DraftJS.AtomicBlockUtils;
   const RichUtils = window.DraftJS.RichUtils;
   const EditorState = window.DraftJS.EditorState;
-
   const TooltipEntity = window.draftail.TooltipEntity;
-
-  const global = globalThis;
-  const $ = global.jQuery;
 
   const MUTABILITY = {};
   MUTABILITY['SNIPPET'] = 'MUTABLE';
   MUTABILITY['SNIPPET-EMBED'] = 'IMMUTABLE';
 
-  const getSnippetModelChooserConfig = (entityType) => {
-    let url;
-    let urlParams;
-
-    if (entityType.type === 'SNIPPET') {
+  const getSnippetModelChooserConfig = (entity) => {
+    if (entity.type === 'SNIPPET') {
       return {
-        url: global.chooserUrls.snippetLinkModelChooser,
+        url: entity.chooserUrls.snippetModelChooser,
         urlParams: {},
-        onload: global.SNIPPET_MODEL_CHOOSER_MODAL_ONLOAD_HANDLERS,
+        onload: window.SNIPPET_MODEL_CHOOSER_MODAL_ONLOAD_HANDLERS,
       };
     }
-    else if (entityType.type === 'SNIPPET-EMBED') {
+    else if (entity.type === 'SNIPPET-EMBED') {
       return {
-        url: global.chooserUrls.snippetEmbedModelChooser,
+        url: entity.chooserUrls.snippetEmbedModelChooser,
         urlParams: {},
-        onload: global.SNIPPET_MODEL_CHOOSER_MODAL_ONLOAD_HANDLERS,
+        onload: window.SNIPPET_MODEL_CHOOSER_MODAL_ONLOAD_HANDLERS,
       };
     }
     else {
@@ -43,14 +37,11 @@
     }
   };
 
-  const getSnippetModelObjectChooserConfig = () => {
-    let url;
-    let urlParams;
-
+  const getSnippetModelObjectChooserConfig = (entity, snippetModelMeta) => {
     return {
-      url: global.chooserUrls.snippetChooser.concat(window.snippetModelMeta.appName, '/', window.snippetModelMeta.modelName, '/'),
+      url: entity.chooserUrls.snippetChooser.concat(snippetModelMeta.appName, '/', snippetModelMeta.modelName, '/'),
       urlParams: {},
-      onload: global.SNIPPET_CHOOSER_MODAL_ONLOAD_HANDLERS,
+      onload: window.SNIPPET_CHOOSER_MODAL_ONLOAD_HANDLERS,
     };
   };
 
@@ -84,7 +75,7 @@
       $(document.body).on('hidden.bs.modal', this.onClose);
 
       // eslint-disable-next-line new-cap
-      this.model_workflow = global.ModalWorkflow({
+      this.model_workflow = window.ModalWorkflow({
         url,
         urlParams,
         onload,
@@ -93,7 +84,7 @@
         },
         onError: () => {
           // eslint-disable-next-line no-alert
-          window.alert(global.wagtailConfig.STRINGS.SERVER_ERROR);
+          window.alert(window.wagtailConfig.STRINGS.SERVER_ERROR);
           onClose();
         },
       });
@@ -108,12 +99,12 @@
 
     onModelChosen(snippetModelMeta) {
       window.snippetModelMeta = snippetModelMeta;
-      const { url, urlParams, onload } = getSnippetModelObjectChooserConfig();
+      const { url, urlParams, onload } = getSnippetModelObjectChooserConfig(this.props.entityType, snippetModelMeta);
 
       this.model_workflow.close();
 
       // eslint-disable-next-line new-cap
-      this.workflow = global.ModalWorkflow({
+      this.workflow = window.ModalWorkflow({
         url,
         urlParams,
         onload,
@@ -122,7 +113,7 @@
         },
         onError: () => {
           // eslint-disable-next-line no-alert
-          window.alert(global.wagtailConfig.STRINGS.SERVER_ERROR);
+          window.alert(window.wagtailConfig.STRINGS.SERVER_ERROR);
           onClose();
         },
       });
@@ -199,14 +190,15 @@
   };
 
   const SnippetEmbed = props => {
+    // How the contentstate in the editor renders the snippetembed
     const { entity, onRemoveEntity, entityKey } = props.blockProps;
     const data = entity.getData();
 
-    let icon = React.createElement(window.wagtail.components.Icon, {name: 'snippet'});
+    let icon = React.createElement(window.wagtail.components.Icon, {name: 'snippet-embed'});
     let label = data.string || '';
 
     return React.createElement("div", {
-      class: "MediaBlock"
+      class: "MediaBlock snippet-embed-rte"
     }, icon, `${label}`);
   };
 
