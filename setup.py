@@ -41,12 +41,11 @@ setup(
     install_requires=["wagtail>=4.0,<7.0"],
     extras_require={
         "dev": [
-            "black==19.*,>=19.10.0",
-            "flake8==3.*,>=3.7.9",
-            "pytest==3.*,>=3.0.0",
-            "pytest-django==3.*,>=3.8.0",
-            "pytest-pythonpath==0.*,>=0.7.3",
-            "wagtail-factories==2.*,>=2.0.0",
+            "black==23.*,>=23.0",
+            "flake8==5.*,>=5.0.0",
+            "pytest==7.*,>=7.0.0",
+            "pytest-django==4.*,>=4.0.0",
+            "wagtail-factories==4.*,>=4.0.0",
         ]
     },
 )
