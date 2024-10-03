@@ -1,6 +1,6 @@
 import factory
 
-from .models import Advert
+from testapp.models import Advert
 
 
 class AdvertFactory(factory.Factory):

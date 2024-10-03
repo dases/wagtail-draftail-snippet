@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     # App Under test
     "wagtail_draftail_snippet",
     # Test app
-    "tests.testapp",
+    "testapp",
 ]
 
 
