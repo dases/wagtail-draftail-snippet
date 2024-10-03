@@ -1,12 +1,5 @@
 import os
 
-from wagtail import __version__
-
-WAGTAIL_MAJOR_VERSION = int(__version__.split(".", 1)[0])
-WT_CORE_APP_PATH = "wagtail.core"
-if WAGTAIL_MAJOR_VERSION >= 3:
-    WT_CORE_APP_PATH = "wagtail"
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ADMINS = (("test@example.com", "TEST-R"),)
@@ -26,7 +19,7 @@ INSTALLED_APPS = [
     "wagtail.images",
     "wagtail.search",
     "wagtail.admin",
-    WT_CORE_APP_PATH,
+    "wagtail",
     "modelcluster",
     "taggit",
     "django.contrib.admin",
@@ -52,7 +45,7 @@ MIDDLEWARE = (
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    WT_CORE_APP_PATH + ".middleware.SiteMiddleware",
+    "wagtail.middleware.SiteMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
 )
 

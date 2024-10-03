@@ -1,10 +1,9 @@
 from django.urls import include, path
-from django.urls import reverse
-from django.utils.html import format_html
+from django.urls import reverse_lazy
 from django.utils.translation import gettext
 
 from wagtail.admin.rich_text.editors.draftail import features as draftail_features
-from wagtail import __version__
+from wagtail import hooks
 
 from . import urls
 from .richtext import (
@@ -13,13 +12,6 @@ from .richtext import (
     SnippetLinkHandler,
     SnippetEmbedHandler,
 )
-
-WAGTAIL_MAJOR_VERSION = int(__version__.split(".", 1)[0])
-
-if WAGTAIL_MAJOR_VERSION >= 3:
-    from wagtail import hooks
-else:
-    from wagtail.core import hooks
 
 
 @hooks.register("register_rich_text_features")
@@ -32,20 +24,24 @@ def register_snippet_link_feature(features):
     # wagtailadmin/js/chooser-modal.js is needed for window.ChooserModalOnloadHandlerFactory
     js_include = [
         "wagtailadmin/js/chooser-modal.js",
-        "wagtailsnippets/js/snippet-chooser-modal.js",
-        "wagtail_draftail_snippet/js/snippet-model-chooser-modal.js",
+        "wagtail_draftail_snippet/js/snippet-chooser-modal.js", # onload handlers
+        "wagtail_draftail_snippet/js/snippet-model-chooser-modal.js", # onload handlers
         "wagtail_draftail_snippet/js/wagtail-draftail-snippet.js",
     ]
-
-    # In WT3 and earlier, SNIPPET_CHOOSER_MODAL_ONLOAD_HANDLERS exists. In later versions, we need to define it.
-    if WAGTAIL_MAJOR_VERSION >= 4:
-        js_include.append("wagtail_draftail_snippet/js/snippet-chooser-modal.js")
 
     features.register_editor_plugin(
         "draftail",
         feature_name,
         draftail_features.EntityFeature(
-            {"type": type_, "icon": "snippet", "description": gettext("Snippet Link")},
+            {
+                "type": type_,
+                "icon": "snippet",
+                "description": gettext("Snippet Link"),
+                "chooserUrls": {
+                    "snippetModelChooser": reverse_lazy("wagtaildraftailsnippet:choose-snippet-link-model"),
+                    "snippetChooser": reverse_lazy('wagtaildraftailsnippet:choose_generic'),
+                },
+            },
             js=js_include,
         ),
     )
@@ -60,46 +56,47 @@ def register_snippet_embed_feature(features):
     feature_name = "snippet-embed"
     type_ = "SNIPPET-EMBED"
 
+    # Defines a handler for converting db saved content,
+    # e.g. <embed app-name="xyz" content-type-name="abcd" embedtype="snippet" id="2"/>
+    # into frontend HTML
     features.register_embed_type(SnippetEmbedHandler)
 
-    # wagtailadmin/js/chooser-modal.js is needed for window.ChooserModalOnloadHandlerFactory
-    js_include = [
-        "wagtailadmin/js/chooser-modal.js",
-        "wagtailsnippets/js/snippet-chooser-modal.js",
-        "wagtail_draftail_snippet/js/snippet-model-chooser-modal.js",
-        "wagtail_draftail_snippet/js/wagtail-draftail-snippet.js",
-    ]
+    # todo prob need to add this...
+    # # define how to convert between editorhtml's representation of embeds and
+    # # the database representation
+    # features.register_converter_rule(
+    #     "editorhtml", "embed", EditorHTMLEmbedConversionRule
+    # )
 
-    # In WT3 and earlier, SNIPPET_CHOOSER_MODAL_ONLOAD_HANDLERS exists. In later versions, we need to define it.
-    if WAGTAIL_MAJOR_VERSION >= 4:
-        js_include.append("wagtail_draftail_snippet/js/snippet-chooser-modal.js")
+    js_include = [
+        "wagtailadmin/js/chooser-modal.js",  # is needed for window.ChooserModalOnloadHandlerFactory
+        "wagtail_draftail_snippet/js/snippet-chooser-modal.js", # onload handlers
+        "wagtail_draftail_snippet/js/snippet-model-chooser-modal.js", # onload handlers
+        "wagtail_draftail_snippet/js/wagtail-draftail-snippet.js", # draftail choosers, Interfaces with Wagtail's ModalWorkflow
+    ]
 
     features.register_editor_plugin(
         "draftail",
         feature_name,
         draftail_features.EntityFeature(
-            {"type": type_, "icon": "code", "description": gettext("Snippet Embed")},
+            {
+                "type": type_,
+                "icon": "code",
+                "description": gettext("Snippet Embed"),
+                "chooserUrls": {
+                    "snippetChooser": reverse_lazy('wagtaildraftailsnippet:choose_generic'),
+                    "snippetEmbedModelChooser": reverse_lazy("wagtaildraftailsnippet:choose-snippet-embed-model"),
+                },
+            },
             js=js_include,
         ),
     )
 
+    # Define how to convert between contentstate's representation of embeds and
+    # the database representation
     features.register_converter_rule(
         "contentstate", feature_name, ContentstateSnippetEmbedConversionRule
     )
-
-
-@hooks.register("insert_editor_js")
-def editor_js():
-
-    html = f"""
-            <script>
-                window.chooserUrls.snippetChooser = '{reverse('wagtaildraftailsnippet:choose_generic')}';
-                window.chooserUrls.snippetLinkModelChooser = '{reverse("wagtaildraftailsnippet:choose-snippet-link-model")}';
-                window.chooserUrls.snippetEmbedModelChooser = '{reverse("wagtaildraftailsnippet:choose-snippet-embed-model")}';
-            </script>    
-            """
-
-    return format_html(html)
 
 
 @hooks.register("register_admin_urls")
